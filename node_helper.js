@@ -91,13 +91,18 @@ module.exports = NodeHelper.create({
         }
 
         try {
+            // Pass interval from main config to client
+            const clientConfig = {
+                ...config.client,
+                interval: config.interval || 1
+            };
             this.adsb.on('socket-closed', () => {
                 this.isConnected = null;
                 this.sendSocketNotification('SET_IS_CONNECTED', this.isConnected);
             }).on('socket-opened', () => {
                 this.isConnected = true;
                 this.sendSocketNotification('SET_IS_CONNECTED', this.isConnected);
-            }).start(config.client);
+            }).start(clientConfig);
             this.isConnected = true;
         } catch (e) {
             console.error('Failed to initialise ADS-B client', e);
