@@ -111,10 +111,9 @@ Module.register('MMM-FlightTracker', {
             if (this.config.showAirline && aircraft.airline) {
                 aircraftHeading.innerHTML += `<span class="dimmed airline"> / ${aircraft.airline}</span>`;
             }
-            // Show description (full name) if available, otherwise type code
-            const typeDisplay = aircraft.description || aircraft.type;
-            if (this.config.showType && typeDisplay) {
-                aircraftHeading.innerHTML += `<span class="dimmed type"> · ${typeDisplay}</span>`;
+            // Show short type code (e.g., A320, B738)
+            if (this.config.showType && aircraft.type) {
+                aircraftHeading.innerHTML += `<span class="dimmed type"> · ${aircraft.type}</span>`;
             }
             // Show route if available (e.g., "BWI-PIT")
             if (this.config.showRoute && aircraft.route) {
