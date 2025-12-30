@@ -28,7 +28,6 @@ Module.register('MMM-FlightTracker', {
 
     getStyles: function () {
         return [
-            'font-awesome.css',
             'MMM-FlightTracker.css'
         ];
     },
@@ -140,21 +139,21 @@ Module.register('MMM-FlightTracker', {
                         speed = aircraft.speed;
                         speedUnits = this.translate('knots');
                 }
-                metadata.push(`<span><i class="fas fa-wind dimmed"></i> ${Math.floor(speed)} ${speedUnits}</span>`);
+                metadata.push(`<span>${Math.floor(speed)} ${speedUnits}</span>`);
             }
             if (this.config.showAltitude && aircraft.altitude) {
-                let altitudeIconId;
+                let altitudeIcon;
                 if (aircraft.verticalRate < 0) {
-                    altitudeIconId = 'fa-angle-double-down';
+                    altitudeIcon = '↓';
                 } else if (aircraft.verticalRate > 0) {
-                    altitudeIconId = 'fa-angle-double-up';
+                    altitudeIcon = '↑';
                 } else {
-                    altitudeIconId = 'fa-arrows-alt-h';
+                    altitudeIcon = '→';
                 }
-                metadata.push(`<span><i class="fas ${altitudeIconId} dimmed"></i> ${altitude} ${this.config.altitudeUnits === 'metric' ? 'm' : 'ft'}</span>`);
+                metadata.push(`<span>${altitudeIcon} ${altitude} ${this.config.altitudeUnits === 'metric' ? 'm' : 'ft'}</span>`);
             }
             if (this.config.showHeading && aircraft.heading) {
-                metadata.push(`<span><i class="far fa-compass dimmed"></i> ${this.cardinalDirection(aircraft.heading)}</span>`);
+                metadata.push(`<span>${this.cardinalDirection(aircraft.heading)}</span>`);
             }
             if (showDistance && aircraft.distance) {
                 let distance;
@@ -179,7 +178,7 @@ Module.register('MMM-FlightTracker', {
                         distanceUnits = 'nm';
                     }
                 }
-                metadata.push(`<span><i class="fas fa-location-arrow dimmed"></i> ${distance.toFixed(1)} ${distanceUnits}</span>`);
+                metadata.push(`<span>${distance.toFixed(1)} ${distanceUnits}</span>`);
             }
             if (metadata.length > 0) {
                 const aircraftMetadata = document.createElement('div');
