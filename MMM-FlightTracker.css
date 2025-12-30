@@ -4,10 +4,7 @@
 
 .aircraft-heading,
 .aircraft-metadata {
-    max-width: 400px;
-    overflow: hidden;
     white-space: nowrap;
-    text-overflow: ellipsis;
 }
 
 .aircraft-heading .airline,
