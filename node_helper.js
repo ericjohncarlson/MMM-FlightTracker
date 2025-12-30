@@ -1,7 +1,6 @@
 const NodeHelper = require('node_helper');
-const Decoder = require('mode-s-decoder');
 const Adsb = require('./lib/adsb');
-const parse = require('csv-parse');
+const { parse } = require('csv-parse');
 const fs = require('fs');
 const path = require('path');
 
