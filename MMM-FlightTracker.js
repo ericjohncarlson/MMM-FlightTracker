@@ -11,7 +11,8 @@ Module.register('MMM-FlightTracker', {
         showType: true,
         showSpeed: true,
         showAltitude: true,
-        showHeading: true
+        showHeading: true,
+        showRoute: true
     },
 
     aircrafts: [],
@@ -103,15 +104,21 @@ Module.register('MMM-FlightTracker', {
                 ? Math.floor(aircraft.altitude * (aircraft.unit === 0 && this.config.altitudeUnits === 'metric' ? 0.3040 : 1))
                 : null;
 
-            // Line 1: Callsign / Airline · Type
+            // Line 1: Callsign / Airline · Type (Route)
             const aircraftHeading = document.createElement('div');
             aircraftHeading.className = 'aircraft-heading medium';
             aircraftHeading.innerHTML = `<span class="bright">${aircraft.callsign}</span>`;
             if (this.config.showAirline && aircraft.airline) {
                 aircraftHeading.innerHTML += `<span class="dimmed airline"> / ${aircraft.airline}</span>`;
             }
-            if (this.config.showType && aircraft.type) {
-                aircraftHeading.innerHTML += `<span class="dimmed type"> · ${aircraft.type}</span>`;
+            // Show description (full name) if available, otherwise type code
+            const typeDisplay = aircraft.description || aircraft.type;
+            if (this.config.showType && typeDisplay) {
+                aircraftHeading.innerHTML += `<span class="dimmed type"> · ${typeDisplay}</span>`;
+            }
+            // Show route if available (e.g., "BWI-PIT")
+            if (this.config.showRoute && aircraft.route) {
+                aircraftHeading.innerHTML += `<span class="dimmed route"> (${aircraft.route})</span>`;
             }
             row.appendChild(aircraftHeading);
 
@@ -150,16 +157,28 @@ Module.register('MMM-FlightTracker', {
             if (this.config.showHeading && aircraft.heading) {
                 metadata.push(`<span><i class="far fa-compass dimmed"></i> ${this.cardinalDirection(aircraft.heading)}</span>`);
             }
-            if (showDistance && this.config.latLng && aircraft.distance) {
-                // Distance from node_helper is in meters, convert to km or nautical miles
+            if (showDistance && aircraft.distance) {
                 let distance;
                 let distanceUnits;
-                if (this.config.altitudeUnits === 'metric') {
-                    distance = aircraft.distance / 1000;  // meters to km
-                    distanceUnits = 'km';
+                // Check if distance is already in nautical miles (tar1090) or meters (network mode)
+                if (aircraft.distanceUnit === 'nm') {
+                    // Already in nautical miles from tar1090
+                    if (this.config.altitudeUnits === 'metric') {
+                        distance = aircraft.distance * 1.852; // nm to km
+                        distanceUnits = 'km';
+                    } else {
+                        distance = aircraft.distance;
+                        distanceUnits = 'nm';
+                    }
                 } else {
-                    distance = aircraft.distance / 1852;  // meters to nautical miles
-                    distanceUnits = 'nm';
+                    // In meters from network mode
+                    if (this.config.altitudeUnits === 'metric') {
+                        distance = aircraft.distance / 1000;  // meters to km
+                        distanceUnits = 'km';
+                    } else {
+                        distance = aircraft.distance / 1852;  // meters to nautical miles
+                        distanceUnits = 'nm';
+                    }
                 }
                 metadata.push(`<span><i class="fas fa-location-arrow dimmed"></i> ${distance.toFixed(1)} ${distanceUnits}</span>`);
             }
@@ -213,4 +232,3 @@ Module.register('MMM-FlightTracker', {
     }
 
 });
-

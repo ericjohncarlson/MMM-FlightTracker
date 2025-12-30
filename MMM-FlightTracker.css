@@ -11,7 +11,8 @@
 }
 
 .aircraft-heading .airline,
-.aircraft-heading .type {
+.aircraft-heading .type,
+.aircraft-heading .route {
     font-size: 0.85em;
 }
 
