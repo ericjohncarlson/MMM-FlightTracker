@@ -108,7 +108,8 @@ Module.register('MMM-FlightTracker', {
             aircraftHeading.className = 'aircraft-heading medium';
             aircraftHeading.innerHTML = `<span class="bright">${aircraft.callsign}</span>`;
             if (this.config.showAirline && aircraft.airline) {
-                aircraftHeading.innerHTML += `<span class="dimmed airline"> / ${aircraft.airline}</span>`;
+                const airlineDisplay = aircraft.airline.substring(0, 25);
+                aircraftHeading.innerHTML += `<span class="dimmed airline"> / ${airlineDisplay}</span>`;
             }
             // Show short type code (e.g., A320, B738)
             if (this.config.showType && aircraft.type) {
