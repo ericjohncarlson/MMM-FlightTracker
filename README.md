@@ -1,104 +1,149 @@
 # MagicMirror² Module: Flight Tracker
 
-`MMM-FlightTracker` is a module for [MagicMirror²](https://github.com/MichMich/MagicMirror) that allows you to display
-real time information about gather from nearby planes transponders. The data is received over radio signals, coming from
-nearby planes that is gather through an [ADS-B receiver](https://en.wikipedia.org/wiki/Automatic_dependent_surveillance_%E2%80%93_broadcast)
-(this is how [FlightRadar24](https://www.flightradar24.com/) gets most of its data)
-connected directly to server running MagicMirror², or over a TCP stream of SBS1 messages.
+`MMM-FlightTracker` is a module for [MagicMirror²](https://github.com/MagicMirrorOrg/MagicMirror) that displays real-time information about nearby aircraft using ADS-B data.
 
-![Screenshot of the Flight Tracker module - Passing by](./screenshot-passing-by.png)
+This fork has been modernized with:
+- **tar1090 integration** for richer aircraft data (recommended)
+- **Flight route lookup** via [adsb.lol](https://adsb.lol) API
+- **Streamlined dependencies** (removed RTL-SDR support, network-only mode)
+- **Zero CVE vulnerabilities**
 
-![Screenshot of the Flight Tracker module - At the window](./screenshot-at-the-window.png)
+## Features
 
-![Screenshot of the Flight Tracker module - No planes](./screenshot-no-planes.png)
+- Display aircraft callsign, airline, type, altitude, speed, heading
+- Show flight routes (origin-destination) when available
+- Support for tar1090/readsb JSON API or legacy SBS1 TCP stream
+- Distance and bearing from your location
+- Configurable units (metric/imperial/knots)
+- Sort by distance, altitude, speed, or age
 
-## Usage
+## Installation
 
-### Prerequisites
-
-This module requires that you have [librtlsdr](https://github.com/steve-m/librtlsdr) installed on your system.
-
-Homebrew (macOS):
-```
-brew install librtlsdr
-```
-
-Debian based Linux distros:
-```
-apt-get install librtlsdr-dev
-```
-
-It also requires to have either:
-- a ADS-B receiver plugged in to the server running MagicMirror². There are inexpensive to buy
-  and you can find [a lot of them on Amazon](https://www.amazon.co.uk/s?k=ads-b&ref=nb_sb_noss_2).
-- a feeder from FlightAware or FlightRadar24 with [dump1090 configured to expose SBS1 messages over TCP](https://github.com/antirez/dump1090#port-30003).
-
-### Setup
-
-Clone this module into your MagicMirror's `modules` directory and install the dependencies:
+Clone this module into your MagicMirror's `modules` directory:
 
 ```sh
-cd modules
-git clone https://github.com/tbouron/MMM-FlightTracker
+cd ~/MagicMirror/modules
+git clone https://github.com/ericjohncarlson/MMM-FlightTracker
 cd MMM-FlightTracker
-npm i
+npm install
 ```
 
-Then add the module to your MagicMirror's configuration. Here is an example:
+## Configuration
+
+Add the module to your `config/config.js`:
+
+### tar1090 Mode (Recommended)
+
+Use this mode if you have [tar1090](https://github.com/wiedehopf/tar1090), [readsb](https://github.com/wiedehopf/readsb), or [adsb-ultrafeeder](https://github.com/sdr-enthusiasts/docker-adsb-ultrafeeder) running. This provides the richest data including full aircraft descriptions and pre-calculated distances.
 
 ```javascript
-/* MagicMirror/config/config.js */
 {
-    /* ...your other config here */
-
-    modules: [
-
-        /* ...your other modules here */
-
-        {
-            module: 'MMM-FlightTracker',
-            header: 'Nearby planes',
-            position: 'top_left',
-            config: {
-                interval: Number,
-                animationSpeed: Number,
-                passingByThreshold: Number,
-                orderBy: '(age|altitude|speed|distance):(asc|desc)',
-                limit: Number,
-                speedUnits: 'metric|imperial|knots',
-                altitudeUnits: 'metric|imperial',
-                latLng: [55.9411885, -3.2753781],
-                showAirline: Boolean,
-                showType: Boolean,
-                showSpeed: Boolean,
-                showAltitude: Boolean,
-                showHeading: Boolean,
-                client: {
-                    mode: 'rtlsdr|network',
-                    host: 'acme.com',
-                    port: 30003
-                }
-            }
-        }
-    ]
+    module: 'MMM-FlightTracker',
+    header: 'Nearby Aircraft',
+    position: 'top_right',
+    config: {
+        client: {
+            mode: 'tar1090',
+            host: '192.168.1.100',  // Your tar1090/readsb host
+            port: 8080,             // Web interface port
+            enableRoutes: true      // Lookup flight routes via adsb.lol
+        },
+        interval: 5,
+        altitudeUnits: 'imperial',
+        speedUnits: 'knots',
+        orderBy: 'distance:asc',
+        limit: 8,
+        showAirline: true,
+        showType: true,
+        showSpeed: true,
+        showAltitude: true,
+        showHeading: true,
+        showRoute: true
+    }
 }
 ```
 
-### Configuration options
+### Network/SBS1 Mode (Legacy)
 
-| Configuration key  | Description                                                                                                                                                                                                                                                                                                                                                                                                                                   | Default            | Required |
-|--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------|----------|
-| interval           | Interval to check if new planes are nearby. This value is in _seconds_.                                                                                                                                                                                                                                                                                                                                                                       | `1`                | Yes      |
-| animationSpeed     | Animation speed to display/hide the module when planes come and go. This value is in _milliseconds_.                                                                                                                                                                                                                                                                                                                                          | `1000`             | No       |
-| passingByThreshold | The threshold altitude to determine if a plane is "at the window" or just "passing by". If no set (or negative) then all planes will be treated the same way.                                                                                                                                                                                                                                                                                 | `-1`               | No       |
-| latLng             | Your current coordinates, as an `Array` of `Number`. E.g. `[55.9411885, -3.2753781]`.<br/><br/>When defined, the distance and bearing, from your coordinates to the plane, will be displayed if available (requires the plane's coordinates to be known).                                                                                                                                                                                     | `undefined`        | No       |
-| orderBy            | The property to order the list of planes by. The syntax for this configuration option is as follow `<property>:<order>`.<br/><br/>Valid values for `<property>` are:<ul><li>`age` (e.g. most recent or older plane tracked)</li><li>`altitude`</li><li>`speed`</li><li>`distance` (available only if you supply `latLng` configuration and the plane broadcast its coordinates)</li></ul><br/>Valid values for `<order>` are: `asc` or `desc` | `undefined`        | No       |
-| limit              | Limit the number of planes to display. If not set (or negative) then all tracked planes are displayed.                                                                                                                                                                                                                                                                                                                                        | -1                 | No       |
-| speedUnits         | The unit to use for speed. By default, it will use the unit defined at the global config. Can be `metric`, `imperial` or `knots`.                                                                                                                                                                                                                                                                                                             | Global unit config | No       |
-| altitudeUnits      | The unit to use for altitude and distance to the plane (if `latLng` is defined). By default, it will use the unit defined at the global config. Can be `metric` or `imperial`.                                                                                                                                                                                                                                                                | Global unit config | No       |
-| showAirline        | Whether or not show the airline for each flight, if available.                                                                                                                                                                                                                                                                                                                                                                                | `true`             | No       |
-| showType           | Whether or not show the aircraft type for each flight, if available.                                                                                                                                                                                                                                                                                                                                                                          | `true`             | No       |
-| showSpeed          | Whether or not show the aircraft speed for each flight, if available.                                                                                                                                                                                                                                                                                                                                                                         | `true`             | No       |
-| showAltitude       | Whether or not show the aircraft altitude for each flight, if available.                                                                                                                                                                                                                                                                                                                                                                      | `true`             | No       |
-| showHeading        | Whether or not show the aircraft heading for each flight, if available.                                                                                                                                                                                                                                                                                                                                                                       | `true`             | No       |
-| client             | The configuration for the ADS-B client. By default, the mode is set to `rtlsdr` (not other options are needed in this mode). In case of `network` mode, options `host` and `port` are required.                                                                                                                                                                                                                                               | `{mode: 'rtlsdr'}` | No       |
+Use this mode to connect to a dump1090 SBS1 stream on port 30003:
+
+```javascript
+{
+    module: 'MMM-FlightTracker',
+    header: 'Nearby Aircraft',
+    position: 'top_right',
+    config: {
+        client: {
+            mode: 'network',
+            host: '192.168.1.100',
+            port: 30003
+        },
+        latLng: [40.4406, -79.9959],  // Required for distance calculation
+        interval: 5,
+        altitudeUnits: 'imperial',
+        speedUnits: 'knots',
+        orderBy: 'distance:asc',
+        limit: 8
+    }
+}
+```
+
+## Configuration Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `interval` | Polling interval in seconds | `1` |
+| `animationSpeed` | Animation speed in milliseconds | `1000` |
+| `passingByThreshold` | Altitude threshold (ft) to separate "nearby" vs "passing" planes. Set to `-1` to disable. | `-1` |
+| `latLng` | Your coordinates `[lat, lng]` for distance calculation (required for network mode, optional for tar1090) | `[]` |
+| `orderBy` | Sort order: `distance:asc`, `altitude:desc`, `speed:asc`, `age:asc`, etc. | `undefined` |
+| `limit` | Maximum number of aircraft to display | `-1` (all) |
+| `altitudeUnits` | `metric` (meters) or `imperial` (feet) | Global config |
+| `speedUnits` | `metric` (km/h), `imperial` (mph), or `knots` | Global config |
+| `showAirline` | Show airline/operator name | `true` |
+| `showType` | Show aircraft type code (e.g., B738, A320) | `true` |
+| `showSpeed` | Show ground speed | `true` |
+| `showAltitude` | Show altitude with climb/descent indicator | `true` |
+| `showHeading` | Show cardinal direction (N, NE, E, etc.) | `true` |
+| `showRoute` | Show flight route if available (e.g., DFW-PHL) | `true` |
+
+### Client Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `mode` | `tar1090` or `network` | `network` |
+| `host` | Hostname or IP of your ADS-B receiver | Required |
+| `port` | Port number (8080 for tar1090, 30003 for SBS1) | Required |
+| `enableRoutes` | Enable route lookup via adsb.lol API (tar1090 mode only) | `true` |
+
+## Display Format
+
+```
+SWA1098 / SOUTHWEST AIRLINES CO · B38M (DFW-PHL)
+500 knots  ↑ 31000 ft  NE  60.4 nm
+```
+
+- **Line 1:** Callsign / Airline (max 25 chars) · Aircraft Type (Route)
+- **Line 2:** Speed, Altitude (↑ climbing, ↓ descending, → level), Heading, Distance
+
+## Data Sources
+
+### tar1090 Mode
+- Aircraft data: Local tar1090 JSON API (`/data/aircraft.json`)
+- Includes: registration, aircraft type, operator, pre-calculated distance
+- Route data: [adsb.lol API](https://api.adsb.lol) (cached per callsign)
+
+### Network Mode
+- Aircraft data: SBS1 BaseStation format over TCP
+- Enriched with local CSV databases (airlines, aircraft types)
+- Distance calculated using Haversine formula
+
+## Credits
+
+- Original module by [Thomas Bouron](https://github.com/tbouron/MMM-FlightTracker)
+- Modernized fork by [Eric Carlson](https://github.com/ericjohncarlson/MMM-FlightTracker)
+- Route data from [adsb.lol](https://adsb.lol) and [VRS standing-data](https://github.com/vradarserver/standing-data)
+
+## License
+
+Apache-2.0
