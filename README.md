@@ -99,7 +99,7 @@ Use this mode to connect to a dump1090 SBS1 stream on port 30003:
 | `maxAltitude` | Only show aircraft at or below this altitude (ft). Set to `-1` to disable. | `-1` |
 | `minDistance` | Only show aircraft at or beyond this distance (nm). Set to `-1` to disable. | `-1` |
 | `maxDistance` | Only show aircraft within this distance (nm). Set to `-1` to disable. | `-1` |
-| `latLng` | Your coordinates `[lat, lng]` for distance calculation (required for network mode, not used for tar1090) | `[]` |
+| `latLng` | Your coordinates `[lat, lng]` for distance calculation. Required for network mode. Optional for tar1090 mode as fallback when receiver doesn't provide distance (e.g., dump1090-fa). | `[]` |
 | `orderBy` | Sort order: `distance:asc`, `altitude:desc`, `speed:asc`, `age:asc`, etc. | `undefined` |
 | `limit` | Maximum number of aircraft to display | `-1` (all) |
 | `altitudeUnits` | `metric` (meters) or `imperial` (feet) | Global config |

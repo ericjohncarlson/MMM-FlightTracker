@@ -157,25 +157,54 @@ module.exports = NodeHelper.create({
         // tar1090 provides enriched data directly
         return this.adsb.getAircrafts()
             .filter(aircraft => aircraft.callsign)
-            .map(aircraft => ({
-                callsign: aircraft.callsign,
-                airline: this._getAirlineFromCallsign(aircraft.callsign) || aircraft.operator,
-                type: aircraft.type,
-                description: aircraft.description,
-                registration: aircraft.registration,
-                altitude: aircraft.altitude,
-                speed: aircraft.speed,
-                heading: aircraft.heading,
-                verticalRate: aircraft.verticalRate,
-                lat: aircraft.lat,
-                lng: aircraft.lng,
-                distance: aircraft.distance, // Already in nautical miles
-                direction: aircraft.direction, // Already in degrees
-                route: aircraft.route,
-                squawk: aircraft.squawk,
-                // Flag to indicate distance is already in nautical miles
-                distanceUnit: 'nm'
-            }));
+            .map(aircraft => {
+                const result = {
+                    callsign: aircraft.callsign,
+                    airline: this._getAirlineFromCallsign(aircraft.callsign) || aircraft.operator,
+                    type: aircraft.type,
+                    description: aircraft.description,
+                    registration: aircraft.registration,
+                    altitude: aircraft.altitude,
+                    speed: aircraft.speed,
+                    heading: aircraft.heading,
+                    verticalRate: aircraft.verticalRate,
+                    lat: aircraft.lat,
+                    lng: aircraft.lng,
+                    distance: aircraft.distance, // In nautical miles if from tar1090
+                    direction: aircraft.direction, // In degrees if from tar1090
+                    route: aircraft.route,
+                    squawk: aircraft.squawk,
+                    distanceUnit: 'nm'
+                };
+
+                // Fallback: calculate distance if not provided by tar1090 (e.g., dump1090-fa)
+                // but latLng config and aircraft position are available
+                if (!aircraft.distance && aircraft.lat && aircraft.lng &&
+                    config.latLng && Array.isArray(config.latLng) && config.latLng.length === 2) {
+                    const R = 6371e3; // Earth radius in metres
+                    const radLat1 = this._toRadians(config.latLng[0]);
+                    const radLat2 = this._toRadians(aircraft.lat);
+                    const deltaLat = this._toRadians(aircraft.lat - config.latLng[0]);
+                    const deltaLng = this._toRadians(aircraft.lng - config.latLng[1]);
+
+                    const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+                        Math.cos(radLat1) * Math.cos(radLat2) *
+                        Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2);
+                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+                    // Convert meters to nautical miles (1 nm = 1852 m)
+                    result.distance = (R * c) / 1852;
+
+                    // Calculate bearing/direction
+                    const y = Math.sin(deltaLng) * Math.cos(radLat2);
+                    const x = Math.cos(radLat1) * Math.sin(radLat2) -
+                        Math.sin(radLat1) * Math.cos(radLat2) * Math.cos(deltaLng);
+                    const bearing = this._toDegrees(Math.atan2(y, x));
+                    result.direction = (bearing + 360) % 360;
+                }
+
+                return result;
+            });
     },
 
     _getAircraftsNetwork: function(config) {
