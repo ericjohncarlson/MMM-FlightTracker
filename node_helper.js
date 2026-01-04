@@ -159,7 +159,7 @@ module.exports = NodeHelper.create({
             .filter(aircraft => aircraft.callsign)
             .map(aircraft => ({
                 callsign: aircraft.callsign,
-                airline: aircraft.operator || this._getAirlineFromCallsign(aircraft.callsign),
+                airline: this._getAirlineFromCallsign(aircraft.callsign) || aircraft.operator,
                 type: aircraft.type,
                 description: aircraft.description,
                 registration: aircraft.registration,
@@ -219,14 +219,16 @@ module.exports = NodeHelper.create({
     },
 
     _getAirlineFromCallsign: function(callsign) {
-        if (!callsign) return 'Unknown';
-        if (!/\d/.test(callsign)) return 'Private';
+        if (!callsign) return null;
+        // No digits = likely a private registration, not a commercial callsign
+        if (!/\d/.test(callsign)) return null;
 
         const airline = this.airlines.find(a => a.icao === callsign.substr(0, 3));
         if (airline) {
             return airline.alias || airline.name;
         }
-        return 'Unknown';
+        // Has digits but no matching airline - could be cargo, charter, etc.
+        return null;
     },
 
     _getAirlineForAircraft: function(aircraft, plane) {
