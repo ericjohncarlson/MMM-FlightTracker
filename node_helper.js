@@ -122,6 +122,14 @@ module.exports = NodeHelper.create({
             aircrafts = this._getAircraftsNetwork(config);
         }
 
+        // Apply altitude filtering
+        if (config.minAltitude > 0) {
+            aircrafts = aircrafts.filter(ac => ac.altitude && ac.altitude >= config.minAltitude);
+        }
+        if (config.maxAltitude > 0) {
+            aircrafts = aircrafts.filter(ac => ac.altitude && ac.altitude <= config.maxAltitude);
+        }
+
         // Apply sorting
         aircrafts = this._sortAircrafts(aircrafts, config);
 

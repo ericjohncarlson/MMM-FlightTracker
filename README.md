@@ -95,7 +95,9 @@ Use this mode to connect to a dump1090 SBS1 stream on port 30003:
 | `interval` | Polling interval in seconds | `1` |
 | `animationSpeed` | Animation speed in milliseconds | `1000` |
 | `passingByThreshold` | Altitude threshold (ft) to separate "nearby" vs "passing" planes. Set to `-1` to disable. | `-1` |
-| `latLng` | Your coordinates `[lat, lng]` for distance calculation (required for network mode, optional for tar1090) | `[]` |
+| `minAltitude` | Only show aircraft at or above this altitude (ft). Set to `-1` to disable. | `-1` |
+| `maxAltitude` | Only show aircraft at or below this altitude (ft). Set to `-1` to disable. | `-1` |
+| `latLng` | Your coordinates `[lat, lng]` for distance calculation (required for network mode, not used for tar1090) | `[]` |
 | `orderBy` | Sort order: `distance:asc`, `altitude:desc`, `speed:asc`, `age:asc`, etc. | `undefined` |
 | `limit` | Maximum number of aircraft to display | `-1` (all) |
 | `altitudeUnits` | `metric` (meters) or `imperial` (feet) | Global config |

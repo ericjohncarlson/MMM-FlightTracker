@@ -5,6 +5,8 @@ Module.register('MMM-FlightTracker', {
         animationSpeed: 1000,
         passingByThreshold: -1,
         latLng: [],
+        minAltitude: -1,
+        maxAltitude: -1,
         altitudeUnits: config.units,
         speedUnits: config.units,
         showAirline: true,
