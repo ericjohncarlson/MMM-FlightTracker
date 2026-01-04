@@ -130,6 +130,18 @@ module.exports = NodeHelper.create({
             aircrafts = aircrafts.filter(ac => ac.altitude && ac.altitude <= config.maxAltitude);
         }
 
+        // Apply distance filtering (config is in nautical miles)
+        if (config.minDistance > 0 || config.maxDistance > 0) {
+            aircrafts = aircrafts.filter(ac => {
+                if (!ac.distance) return false;
+                // Convert to nautical miles if needed (network mode uses meters)
+                const distanceNm = ac.distanceUnit === 'nm' ? ac.distance : ac.distance / 1852;
+                if (config.minDistance > 0 && distanceNm < config.minDistance) return false;
+                if (config.maxDistance > 0 && distanceNm > config.maxDistance) return false;
+                return true;
+            });
+        }
+
         // Apply sorting
         aircrafts = this._sortAircrafts(aircrafts, config);
 

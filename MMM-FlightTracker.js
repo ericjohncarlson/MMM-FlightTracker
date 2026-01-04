@@ -7,6 +7,8 @@ Module.register('MMM-FlightTracker', {
         latLng: [],
         minAltitude: -1,
         maxAltitude: -1,
+        minDistance: -1,
+        maxDistance: -1,
         altitudeUnits: config.units,
         speedUnits: config.units,
         showAirline: true,
