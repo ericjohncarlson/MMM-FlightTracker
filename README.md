@@ -4,7 +4,7 @@
 
 This fork has been modernized with:
 - **tar1090 integration** for richer aircraft data (recommended)
-- **Flight route lookup** via [adsb.lol](https://adsb.lol) API
+- **Flight route lookup** via [adsb.im](https://adsb.im) API (same source as tar1090)
 - **Streamlined dependencies** (removed RTL-SDR support, network-only mode)
 - **Zero CVE vulnerabilities**
 
@@ -46,7 +46,7 @@ Use this mode if you have [tar1090](https://github.com/wiedehopf/tar1090), [read
             mode: 'tar1090',
             host: '192.168.1.100',  // Your tar1090/readsb host
             port: 8080,             // Web interface port
-            enableRoutes: true      // Lookup flight routes via adsb.lol
+            enableRoutes: true      // Lookup flight routes via adsb.im
         },
         interval: 5,
         altitudeUnits: 'imperial',
@@ -114,7 +114,7 @@ Use this mode to connect to a dump1090 SBS1 stream on port 30003:
 | `mode` | `tar1090` or `network` | `network` |
 | `host` | Hostname or IP of your ADS-B receiver | Required |
 | `port` | Port number (8080 for tar1090, 30003 for SBS1) | Required |
-| `enableRoutes` | Enable route lookup via adsb.lol API (tar1090 mode only) | `true` |
+| `enableRoutes` | Enable route lookup via adsb.im API (tar1090 mode only) | `true` |
 
 ## Display Format
 
@@ -131,7 +131,9 @@ SWA1098 / SOUTHWEST AIRLINES CO · B38M (DFW-PHL)
 ### tar1090 Mode
 - Aircraft data: Local tar1090 JSON API (`/data/aircraft.json`)
 - Includes: registration, aircraft type, operator, pre-calculated distance
-- Route data: [adsb.lol API](https://api.adsb.lol) (cached per callsign)
+- Route data: [adsb.im API](https://adsb.im) (same source as tar1090 web UI)
+  - Routes cached for 15 minutes per callsign
+  - Low-confidence routes are filtered out
 
 ### Network Mode
 - Aircraft data: SBS1 BaseStation format over TCP
@@ -142,7 +144,7 @@ SWA1098 / SOUTHWEST AIRLINES CO · B38M (DFW-PHL)
 
 - Original module by [Thomas Bouron](https://github.com/tbouron/MMM-FlightTracker)
 - Modernized fork by [Eric Carlson](https://github.com/ericjohncarlson/MMM-FlightTracker)
-- Route data from [adsb.lol](https://adsb.lol) and [VRS standing-data](https://github.com/vradarserver/standing-data)
+- Route data from [adsb.im](https://adsb.im) and [VRS standing-data](https://github.com/vradarserver/standing-data)
 
 ## License
 
